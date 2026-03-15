@@ -1,17 +1,18 @@
-const AWS = require("aws-sdk");
-const dynamodb = new AWS.DynamoDB({ region: "eu-central-1", apiVersion: "2012-08-10" });
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, ScanCommand } = require("@aws-sdk/lib-dynamodb");
 
-exports.handler = (event, context, callback) => {
-    const params = { TableName: "lp-dev-lab1-authors" };
-    dynamodb.scan(params, (err, data) => {
-        if (err) callback(err);
-        else {
-            const authors = data.Items.map(item => ({
-                id: item.id.S,
-                firstName: item.firstName.S,
-                lastName: item.lastName.S
-            }));
-            callback(null, authors);
-        }
+const client = new DynamoDBClient({ region: "eu-central-1" });
+const docClient = DynamoDBDocumentClient.from(client);
+
+exports.handler = async (event) => {
+    const command = new ScanCommand({
+        TableName: process.env.AUTHORS_TABLE,
     });
+
+    try {
+        const data = await docClient.send(command);
+        return data.Items;
+    } catch (err) {
+        return err;
+    }
 };

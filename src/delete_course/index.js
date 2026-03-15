@@ -1,12 +1,19 @@
-const AWS = require("aws-sdk");
-const dynamodb = new AWS.DynamoDB({ region: "eu-central-1", apiVersion: "2012-08-10" });
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, DeleteCommand } = require("@aws-sdk/lib-dynamodb");
 
-exports.handler = (event, context, callback) => {
-    const params = {
-        TableName: "lp-dev-lab1-courses",
-        Key: { id: { S: event.id } }
-    };
-    dynamodb.deleteItem(params, (err, data) => {
-        if (err) callback(err || null, data);
+const client = new DynamoDBClient({ region: "eu-central-1" });
+const docClient = DynamoDBDocumentClient.from(client);
+
+exports.handler = async (event) => {
+    const command = new DeleteCommand({
+        TableName: process.env.COURSES_TABLE,
+        Key: { id: event.id }
     });
+
+    try {
+        await docClient.send(command);
+        return {};
+    } catch (err) {
+        return err;
+    }
 };

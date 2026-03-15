@@ -1,20 +1,18 @@
-const AWS = require("aws-sdk");
-const dynamodb = new AWS.DynamoDB({ region: "eu-central-1", apiVersion: "2012-08-10" });
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, ScanCommand } = require("@aws-sdk/lib-dynamodb");
 
-exports.handler = (event, context, callback) => {
-    const params = {
-        TableName: "lp-dev-lab1-courses",
-        Key: { id: { S: event.id } }
-    };
-    dynamodb.getItem(params, (err, data) => {
-        if (err) callback(err);
-        else callback(null, {
-            id: data.Item.id.S,
-            title: data.Item.title.S,
-            watchHref: data.Item.watchHref.S,
-            authorId: data.Item.authorId.S,
-            length: data.Item.length.S,
-            category: data.Item.category.S
-        });
+const client = new DynamoDBClient({ region: "eu-central-1" });
+const docClient = DynamoDBDocumentClient.from(client);
+
+exports.handler = async (event) => {
+    const command = new ScanCommand({
+        TableName: process.env.COURSES_TABLE
     });
+
+    try {
+        const data = await docClient.send(command);
+        return { statusCode: 200, body: JSON.stringify(data.Items) };
+    } catch (err) {
+        return { statusCode: 500, body: JSON.stringify(err.message) };
+    }
 };

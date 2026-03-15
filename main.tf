@@ -18,6 +18,9 @@ module "lambdas" {
   filename      = each.value.output_path
   handler       = "index.handler"
   runtime       = "nodejs18.x" 
+  source_code_hash = each.value.output_base64sha256
+  courses_table_name = module.table_courses.table_name
+  authors_table_name = module.table_authors.table_name
 }
 
 module "api_gateway" {
