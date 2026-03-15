@@ -1,7 +1,17 @@
+locals {
+  permissions = {
+    get_authors   = { action = "dynamodb:Scan",       resource = var.authors_table_arn }
+    get_courses   = { action = "dynamodb:Scan",       resource = var.courses_table_arn }
+    get_course    = { action = "dynamodb:GetItem",    resource = var.courses_table_arn }
+    save_course   = { action = "dynamodb:PutItem",    resource = var.courses_table_arn }
+    update_course = { action = "dynamodb:PutItem",    resource = var.courses_table_arn }
+    delete_course = { action = "dynamodb:DeleteItem", resource = var.courses_table_arn }
+  }
+}
 
-
-resource "aws_iam_role" "lambda_role" {
-  name = "${module.this.id}-lambda-role"
+resource "aws_iam_role" "lambda_roles" {
+  for_each = local.permissions
+  name     = "${var.namespace}-${var.stage}-${each.key}-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -13,22 +23,23 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-resource "aws_iam_role_policy" "lambda_policy" {
-  name = "${module.this.id}-lambda-policy"
-  role = aws_iam_role.lambda_role.id
+resource "aws_iam_role_policy" "dynamodb_limit" {
+  for_each = local.permissions
+  name     = "DynamoDBAccess"
+  role     = aws_iam_role.lambda_roles[each.key].id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+        Action   = [each.value.action]
         Effect   = "Allow"
-        Resource = "arn:aws:logs:*:*:*"
+        Resource = each.value.resource
       },
       {
-        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem", "dynamodb:Scan", "dynamodb:Query"]
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
         Effect   = "Allow"
-        Resource = "*"
+        Resource = "arn:aws:logs:*:*:*"
       }
     ]
   })

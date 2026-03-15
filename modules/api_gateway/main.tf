@@ -1,12 +1,18 @@
-
-resource "aws_apigatewayv2_api" "http_api" {
-  name          = "${module.this.id}-api"
-  protocol_type = "HTTP"
+module "label" {
+  source  = "cloudposse/label/null"
+  version = "0.25.0"
+  context = module.this.context
 }
 
 resource "aws_apigatewayv2_api" "http_api" {
-  name          = "${module.this.id}-api"
+  name          = "${module.label.id}-api"
   protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = ["*"]
+    allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allow_headers = ["content-type", "authorization", "x-amz-date", "x-api-key", "x-amz-security-token"]
+  }
 }
 
 resource "aws_apigatewayv2_stage" "default" {
@@ -16,128 +22,35 @@ resource "aws_apigatewayv2_stage" "default" {
 }
 
 resource "aws_apigatewayv2_integration" "lambda" {
+  for_each         = var.lambda_arns
   api_id           = aws_apigatewayv2_api.http_api.id
   integration_type = "AWS_PROXY"
-  integration_uri  = var.lambda_arn
+  integration_uri  = each.value
 }
 
-resource "aws_apigatewayv2_route" "get_courses" {
-  api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = "GET /courses"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+locals {
+  routes = {
+    "GET /authors"      = "get_authors"
+    "GET /courses"      = "get_courses"
+    "POST /courses"     = "save_course"
+    "GET /courses/{id}" = "get_course"
+    "PUT /courses/{id}" = "update_course"
+    "DELETE /courses/{id}" = "delete_course"
+  }
+}
+
+resource "aws_apigatewayv2_route" "routes" {
+  for_each = local.routes
+  api_id   = aws_apigatewayv2_api.http_api.id
+  route_key = each.key
+  target    = "integrations/${aws_apigatewayv2_integration.lambda[each.value].id}"
 }
 
 resource "aws_lambda_permission" "api_gw" {
-  statement_id  = "AllowExecutionFromAPIGateway"
+  for_each      = var.lambda_arns
+  statement_id  = "AllowExecutionFromAPIGateway-${each.key}"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_arn
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
-}
-
-resource "aws_apigatewayv2_integration" "lambda_authors" {
-  api_id           = aws_apigatewayv2_api.http_api.id
-  integration_type = "AWS_PROXY"
-  integration_uri  = var.lambda_authors_arn
-}
-
-resource "aws_apigatewayv2_route" "get_authors" {
-  api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = "GET /authors"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda_authors.id}"
-}
-
-
-resource "aws_lambda_permission" "api_gw_authors" {
-  statement_id  = "AllowExecutionFromAPIGatewayAuthors"
-  action        = "lambda:InvokeFunction"
-  function_name = var.lambda_authors_arn
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
-}
-
-resource "aws_apigatewayv2_integration" "save_course" {
-  api_id           = aws_apigatewayv2_api.http_api.id
-  integration_type = "AWS_PROXY"
-  integration_uri  = var.lambda_save_course_arn
-}
-
-resource "aws_apigatewayv2_route" "post_course" {
-  api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = "POST /courses"
-  target    = "integrations/${aws_apigatewayv2_integration.save_course.id}"
-}
-
-resource "aws_lambda_permission" "api_gw_save" {
-  statement_id  = "AllowExecutionFromAPIGatewaySave"
-  action        = "lambda:InvokeFunction"
-  function_name = var.lambda_save_course_arn
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
-}
-resource "aws_apigatewayv2_stage" "default" {
-  api_id      = aws_apigatewayv2_api.http_api.id
-  name        = "$default"
-  auto_deploy = true
-}
-
-resource "aws_apigatewayv2_integration" "lambda" {
-  api_id           = aws_apigatewayv2_api.http_api.id
-  integration_type = "AWS_PROXY"
-  integration_uri  = var.lambda_arn
-}
-
-resource "aws_apigatewayv2_route" "get_courses" {
-  api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = "GET /courses"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
-}
-
-resource "aws_lambda_permission" "api_gw" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = var.lambda_arn
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
-}
-
-resource "aws_apigatewayv2_integration" "lambda_authors" {
-  api_id           = aws_apigatewayv2_api.http_api.id
-  integration_type = "AWS_PROXY"
-  integration_uri  = var.lambda_authors_arn
-}
-
-resource "aws_apigatewayv2_route" "get_authors" {
-  api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = "GET /authors"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda_authors.id}"
-}
-
-
-resource "aws_lambda_permission" "api_gw_authors" {
-  statement_id  = "AllowExecutionFromAPIGatewayAuthors"
-  action        = "lambda:InvokeFunction"
-  function_name = var.lambda_authors_arn
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
-}
-
-resource "aws_apigatewayv2_integration" "save_course" {
-  api_id           = aws_apigatewayv2_api.http_api.id
-  integration_type = "AWS_PROXY"
-  integration_uri  = var.lambda_save_course_arn
-}
-
-resource "aws_apigatewayv2_route" "post_course" {
-  api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = "POST /courses"
-  target    = "integrations/${aws_apigatewayv2_integration.save_course.id}"
-}
-
-resource "aws_lambda_permission" "api_gw_save" {
-  statement_id  = "AllowExecutionFromAPIGatewaySave"
-  action        = "lambda:InvokeFunction"
-  function_name = var.lambda_save_course_arn
+  function_name = each.value
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
 }

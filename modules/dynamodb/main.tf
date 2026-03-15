@@ -1,5 +1,13 @@
+module "label" {
+  source    = "cloudposse/label/null"
+  version   = "0.25.0"
+  namespace = var.namespace
+  stage     = var.stage
+  name      = var.name
+}
+
 resource "aws_dynamodb_table" "this" {
-  name         = var.table_name
+  name         = module.label.id
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "id"
 
@@ -8,8 +16,5 @@ resource "aws_dynamodb_table" "this" {
     type = "S"
   }
 
-  tags = var.tags
+  tags = module.label.tags
 }
-
-
-
