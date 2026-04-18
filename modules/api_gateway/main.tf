@@ -12,7 +12,7 @@ resource "aws_apigatewayv2_api" "http_api" {
     allow_origins = ["*"]
     allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     allow_headers = ["content-type", "authorization", "x-amz-date", "x-api-key", "x-amz-security-token"]
-  }
+  }S
 }
 
 resource "aws_apigatewayv2_stage" "default" {
