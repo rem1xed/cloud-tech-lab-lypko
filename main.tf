@@ -54,3 +54,10 @@ module "iam" {
   authors_table_arn = module.table_authors.table_arn
   courses_table_arn = module.table_courses.table_arn
 }
+
+module "frontend" {
+  source    = "./modules/s3"
+  namespace = var.namespace
+  stage     = var.stage
+  name      = var.name
+}
