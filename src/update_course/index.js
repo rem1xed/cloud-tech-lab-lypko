@@ -5,13 +5,16 @@ const client = new DynamoDBClient({ region: "eu-central-1" });
 const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
+    const data = event.body ? JSON.parse(event.body) : event;
+    const courseId = event.pathParameters ? event.pathParameters.id : data.id;
+
     const item = {
-        id: event.id,
-        title: event.title,
-        watchHref: event.watchHref,
-        authorId: event.authorId,
-        length: event.length,
-        category: event.category
+        id: courseId,
+        title: data.title,
+        watchHref: data.watchHref,
+        authorId: data.authorId,
+        length: data.length,
+        category: data.category
     };
 
     const command = new PutCommand({
@@ -21,8 +24,16 @@ exports.handler = async (event) => {
 
     try {
         await docClient.send(command);
-        return item;
+        return {
+            statusCode: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(item)
+        };
     } catch (err) {
-        return err;
+        return {
+            statusCode: 500,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ error: err.message })
+        };
     }
 };

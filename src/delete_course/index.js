@@ -5,15 +5,25 @@ const client = new DynamoDBClient({ region: "eu-central-1" });
 const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
+    const courseId = event.pathParameters ? event.pathParameters.id : event.id;
+
     const command = new DeleteCommand({
         TableName: process.env.COURSES_TABLE,
-        Key: { id: event.id }
+        Key: { id: courseId }
     });
 
     try {
         await docClient.send(command);
-        return {};
+        return {
+            statusCode: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+        };
     } catch (err) {
-        return err;
+        return {
+            statusCode: 500,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ error: err.message })
+        };
     }
 };

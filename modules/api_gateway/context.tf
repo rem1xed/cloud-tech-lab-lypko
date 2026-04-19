@@ -16,7 +16,7 @@
 # and access individual variables as `module.this.<var>`,
 # with final values filled in.
 #
-# For example, when using defaults, `module.this.context.delimiter`
+# For example, when using defaults, `module.this.context.delimiter
 # will be null, and `module.this.delimiter` will be `-` (hyphen).
 #
 

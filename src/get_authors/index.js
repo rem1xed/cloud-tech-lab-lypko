@@ -11,8 +11,16 @@ exports.handler = async (event) => {
 
     try {
         const data = await docClient.send(command);
-        return data.Items;
+        return {
+            statusCode: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data.Items)
+        };
     } catch (err) {
-        return err;
+        return {
+            statusCode: 500,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ error: err.message })
+        };
     }
 };

@@ -5,15 +5,18 @@ const client = new DynamoDBClient({ region: "eu-central-1" });
 const docClient = DynamoDBDocumentClient.from(client);
 
 exports.handler = async (event) => {
-    const id = event.title.replace(/\s+/g, '-').toLowerCase();
+
+    const data = event.body ? JSON.parse(event.body) : event;
+
+    const id = data.title.replace(/\s+/g, '-').toLowerCase();
     
     const item = {
         id: id,
-        title: event.title,
+        title: data.title,
         watchHref: `http://www.pluralsight.com/courses/${id}`,
-        authorId: event.authorId,
-        length: event.length,
-        category: event.category
+        authorId: data.authorId,
+        length: data.length,
+        category: data.category
     };
 
     const command = new PutCommand({
@@ -23,8 +26,17 @@ exports.handler = async (event) => {
 
     try {
         await docClient.send(command);
-        return item;
+        // 3. Правильний формат відповіді для API Gateway
+        return {
+            statusCode: 201,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(item)
+        };
     } catch (err) {
-        return err;
+        return {
+            statusCode: 500,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ error: err.message })
+        };
     }
 };
