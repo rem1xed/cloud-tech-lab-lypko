@@ -1,0 +1,36 @@
+{
+    "MetricAlarms": [
+        {
+            "AlarmName": "lambda-error-alarm",
+            "AlarmArn": "arn:aws:cloudwatch:eu-central-1:885686552426:alarm:lambda-error-alarm",
+            "AlarmDescription": "This metric monitors lambda function errors",
+            "AlarmConfigurationUpdatedTimestamp": "2026-04-20T01:07:27.197000+03:00",
+            "ActionsEnabled": true,
+            "OKActions": [],
+            "AlarmActions": [
+                "arn:aws:sns:eu-central-1:885686552426:app-alerts-topic"
+            ],
+            "InsufficientDataActions": [],
+            "StateValue": "INSUFFICIENT_DATA",
+            "StateReason": "Insufficient Data: 1 datapoint was unknown.",
+            "StateReasonData": "{\"version\":\"1.0\",\"queryDate\":\"2026-04-19T22:33:28.528+0000\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[],\"threshold\":1.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-04-19T22:32:00.000+0000\"}]}",
+            "StateUpdatedTimestamp": "2026-04-20T01:33:28.530000+03:00",
+            "MetricName": "Errors",
+            "Namespace": "AWS/Lambda",
+            "Statistic": "Sum",
+            "Dimensions": [
+                {
+                    "Name": "FunctionName",
+                    "Value": "lp-dev-lab1-save-course"
+                }
+            ],
+            "Period": 60,
+            "EvaluationPeriods": 1,
+            "Threshold": 1.0,
+            "ComparisonOperator": "GreaterThanThreshold",
+            "TreatMissingData": "missing",
+            "StateTransitionedTimestamp": "2026-04-20T01:33:28.530000+03:00"
+        }
+    ],
+    "CompositeAlarms": []
+}

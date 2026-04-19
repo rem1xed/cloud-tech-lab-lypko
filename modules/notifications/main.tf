@@ -31,18 +31,19 @@ resource "aws_sns_topic_subscription" "email_sub_us_east_1" {
 
 resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
   alarm_name          = "lambda-error-alarm"
-  comparison_operator = "GreaterThanThreshold"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
   metric_name         = "Errors"
   namespace           = "AWS/Lambda"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
-  alarm_description   = "This metric monitors lambda function errors"
+  treat_missing_data  = "notBreaching"
+  alarm_description   = "This metric monitors lambda function errors for save_course"
   alarm_actions       = [aws_sns_topic.alerts.arn]
 
   dimensions = {
-    FunctionName = "lp-dev-save-course" 
+    FunctionName = "lp-dev-lab1-save-course" 
   }
 }
 

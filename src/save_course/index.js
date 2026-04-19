@@ -26,17 +26,17 @@ exports.handler = async (event) => {
 
     try {
         await docClient.send(command);
-        // 3. Правильний формат відповіді для API Gateway
         return {
             statusCode: 201,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(item)
         };
     } catch (err) {
-        return {
-            statusCode: 500,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ error: err.message })
-        };
+        throw err;
+        // return {
+        //     statusCode: 500,
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({ error: err.message })
+        // };
     }
 };
