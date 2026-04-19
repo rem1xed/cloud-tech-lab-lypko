@@ -9,3 +9,7 @@ output "authors_table_name" {
 output "api_endpoint" {
   value = module.api_gateway.api_endpoint
 }
+
+output "frontend_url" {
+  value = module.frontend.website_endpoint
+}

@@ -47,10 +47,10 @@ resource "aws_s3_bucket_website_configuration" "website" {
 }
 
 resource "aws_s3_object" "frontend_files" {
-  for_each     = fileset("${path.root}/src/frontend", "**/*")
+  for_each     = fileset("${path.root}/react-app-frontend/build", "**/*")
   bucket       = aws_s3_bucket.frontend.id
   key          = each.value
-  source       = "${path.root}/src/frontend/${each.value}"
+  source       = "${path.root}/react-app-frontend/build/${each.value}"
   content_type = lookup({
     "html" = "text/html"
     "css"  = "text/css"
